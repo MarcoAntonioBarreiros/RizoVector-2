@@ -1,0 +1,39 @@
+name: Import RizoVector experimental
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/import-experimental.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clone experimental source
+        run: |
+          git clone --depth 1 --branch experiment/biological-motion \
+            https://github.com/MarcoAntonioBarreiros/RizoVector.git /tmp/rizovector-source
+          rm -rf /tmp/rizovector-source/.git
+
+      - name: Replace target contents
+        run: |
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a /tmp/rizovector-source/. .
+
+      - name: Commit imported version
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Import biological motion experimental version"
+          git push origin HEAD:main
